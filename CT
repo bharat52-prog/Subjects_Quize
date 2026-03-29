@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contemporary Technology Quiz</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(rgba(137,247,254,0.6), rgba(102,166,255,0.6)), url("bgs.webp");
+    background-size: cover;
+}
+
+.quiz-container {
+    width: 700px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+}
+
+button {
+    background: #66a6ff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #89f7fe;
+    color: #000;
+}
+
+.option {
+    padding: 10px;
+    border: 1px solid #66a6ff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.option:hover {
+    background: #66a6ff;
+    color: #fff;
+}
+
+.progress {
+    height: 8px;
+    background: #eee;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #66a6ff;
+}
+
+#timer {
+    color: red;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-container">
+
+<!-- SELECT SET -->
+<div id="setScreen" class="screen" style="display:flex;">
+<h2>Select Technology Set</h2>
+<button onclick="startQuiz(1)">Set 1 - AI & IoT</button>
+<button onclick="startQuiz(2)">Set 2 - Cloud & Security</button>
+<button onclick="startQuiz(3)">Set 3 - Future Tech</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quizScreen" class="screen">
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div id="timer">Time Left: <span id="time">10</span>s</div>
+<div id="question"></div>
+<div id="options"></div>
+</div>
+
+<!-- RESULT -->
+<div id="resultScreen" class="screen">
+<h2>Quiz Completed 🎉</h2>
+<p>Your Score: <span id="score"></span></p>
+<button onclick="showAnswers()">View Answers</button>
+<button onclick="goBack()">Restart</button>
+</div>
+
+</div>
+
+<script>
+
+// ================= QUESTIONS =================
+const quizSets = {
+
+1: [
+{question:"What is Artificial Intelligence?",options:["Smart machines","Old computers","Typewriter","Printer"],answer:"Smart machines"},
+{question:"IoT stands for?",options:["Internet of Things","Input Tool","Internal Tech","Output Tool"],answer:"Internet of Things"},
+{question:"Machine learning is part of?",options:["AI","Hardware","Network","Security"],answer:"AI"},
+{question:"Smart home uses?",options:["IoT","CPU","RAM","Keyboard"],answer:"IoT"},
+{question:"AI used in?",options:["Robots","Books","Pens","Chairs"],answer:"Robots"},
+{question:"Alexa is example of?",options:["AI assistant","Game","Hardware","Virus"],answer:"AI assistant"},
+{question:"Data needed for ML?",options:["Large data","No data","Small data","Random"],answer:"Large data"},
+{question:"Self-driving car uses?",options:["AI","Paper","Mouse","Cable"],answer:"AI"},
+{question:"Chatbot is?",options:["AI program","Hardware","Printer","Router"],answer:"AI program"},
+{question:"Face recognition uses?",options:["AI","CPU","RAM","Mouse"],answer:"AI"}
+],
+
+2: [
+{question:"Cloud computing means?",options:["Online storage","Hard disk","RAM","CPU"],answer:"Online storage"},
+{question:"SaaS example?",options:["Google Docs","Keyboard","Mouse","Printer"],answer:"Google Docs"},
+{question:"Cybersecurity protects?",options:["Data","Chair","Desk","Pen"],answer:"Data"},
+{question:"Firewall is?",options:["Security tool","Game","App","Virus"],answer:"Security tool"},
+{question:"VPN used for?",options:["Secure internet","Fast typing","Gaming","Printing"],answer:"Secure internet"},
+{question:"Phishing is?",options:["Cyber attack","Fishing","Game","Tool"],answer:"Cyber attack"},
+{question:"Cloud example?",options:["AWS","Keyboard","Mouse","CPU"],answer:"AWS"},
+{question:"Encryption means?",options:["Secure data","Delete data","Copy data","Move data"],answer:"Secure data"},
+{question:"Password should be?",options:["Strong","Weak","Short","Simple"],answer:"Strong"},
+{question:"Antivirus protects from?",options:["Virus","User","Mouse","Keyboard"],answer:"Virus"}
+],
+
+3: [
+{question:"5G is used for?",options:["Fast internet","Printing","Gaming only","Typing"],answer:"Fast internet"},
+{question:"Blockchain used for?",options:["Secure transaction","Typing","Printing","Drawing"],answer:"Secure transaction"},
+{question:"VR means?",options:["Virtual Reality","Video RAM","Visual RAM","Very Real"],answer:"Virtual Reality"},
+{question:"AR means?",options:["Augmented Reality","Actual RAM","Auto Run","Add RAM"],answer:"Augmented Reality"},
+{question:"Drone uses?",options:["Remote tech","Paper","Ink","Cable"],answer:"Remote tech"},
+{question:"Edge computing?",options:["Near data source","Cloud only","Offline","None"],answer:"Near data source"},
+{question:"Big data means?",options:["Large data","Small data","No data","Text"],answer:"Large data"},
+{question:"Quantum computing?",options:["Advanced computing","Old PC","Laptop","Tablet"],answer:"Advanced computing"},
+{question:"Biometric security uses?",options:["Fingerprint","Mouse","Keyboard","Monitor"],answer:"Fingerprint"},
+{question:"Future tech example?",options:["AI","Book","Pen","Paper"],answer:"AI"}
+]
+
+};
+
+// ================= LOGIC =================
+let currentSet=[],index=0,score=0,time=10,timer;
+let userAnswers=[];
+
+const setScreen=document.getElementById("setScreen");
+const quizScreen=document.getElementById("quizScreen");
+const resultScreen=document.getElementById("resultScreen");
+const question=document.getElementById("question");
+const options=document.getElementById("options");
+const progressBar=document.getElementById("progressBar");
+const timeDisplay=document.getElementById("time");
+const scoreDisplay=document.getElementById("score");
+
+function startQuiz(num){
+currentSet=quizSets[num];
+index=0;
+score=0;
+userAnswers=[];
+setScreen.style.display="none";
+quizScreen.style.display="flex";
+showQuestion();
+}
+
+function showQuestion(){
+resetTimer();
+startTimer();
+let q=currentSet[index];
+question.innerHTML="<b>Q"+(index+1)+":</b> "+q.question;
+options.innerHTML="";
+q.options.forEach(opt=>{
+let div=document.createElement("div");
+div.className="option";
+div.innerText=opt;
+div.onclick=()=>selectAnswer(opt);
+options.appendChild(div);
+});
+progressBar.style.width=((index)/currentSet.length)*100+"%";
+}
+
+function selectAnswer(ans){
+clearInterval(timer);
+userAnswers.push(ans);
+if(ans===currentSet[index].answer) score++;
+index++;
+index<currentSet.length?showQuestion():showResult();
+}
+
+function showResult(){
+quizScreen.style.display="none";
+resultScreen.style.display="flex";
+scoreDisplay.innerText=score+" / "+currentSet.length;
+}
+
+function showAnswers(){
+resultScreen.innerHTML="<h2>Your Answers</h2>";
+
+currentSet.forEach((q,i)=>{
+let isCorrect=userAnswers[i]===q.answer;
+
+let div=document.createElement("div");
+div.innerHTML=`
+<b>Q${i+1}:</b> ${q.question}<br>
+Your Answer: <span style="color:${isCorrect?'green':'red'};">
+${userAnswers[i]||"Not Answered"}
+</span><br><hr>
+`;
+resultScreen.appendChild(div);
+});
+
+let back=document.createElement("button");
+back.innerText="Restart";
+back.onclick=goBack;
+resultScreen.appendChild(back);
+}
+
+function goBack(){
+location.reload();
+}
+
+function startTimer(){
+time=10;
+timeDisplay.innerText=time;
+timer=setInterval(()=>{
+time--;
+timeDisplay.innerText=time;
+if(time<=0){
+clearInterval(timer);
+userAnswers.push("Not Answered");
+index++;
+index<currentSet.length?showQuestion():showResult();
+}
+},1000);
+}
+
+function resetTimer(){
+clearInterval(timer);
+}
+
+</script>
+
+</body>
+</html>
