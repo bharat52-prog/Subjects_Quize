@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subject Quiz Portal</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+color:white;
+overflow-x:hidden;
+
+background-image:url("background/jvs.avif");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+background-attachment:fixed;
+}
+
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+z-index:-1;
+}
+
+header{
+text-align:center;
+padding:25px 0;
+font-size:2rem;
+font-weight:bold;
+background:rgba(0,0,0,0.4);
+}
+
+main{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:20px;
+}
+
+.subjects{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:25px;
+width:90%;
+max-width:1000px;
+}
+
+.subject-card{
+background:rgba(255,255,255,0.15);
+padding:40px 20px;
+border-radius:20px;
+text-align:center;
+text-decoration:none;
+color:white;
+font-size:1.3rem;
+backdrop-filter:blur(10px);
+transition:0.3s;
+}
+
+.subject-card:hover{
+transform:scale(1.05);
+background:rgba(255,255,255,0.25);
+}
+
+footer{
+text-align:center;
+padding:15px;
+background:rgba(0,0,0,0.4);
+}
+</style>
+</head>
+
+<body>
+
+<header>🎓 Subject Quiz Portal</header>
+
+<main>
+<h2>Choose Your Subject</h2>
+
+<div class="subjects">
+
+<a class="subject-card" href="vp.html">
+Visual Programming
+</a>
+
+<a class="subject-card" href="sep.html">
+Software Engineering Project
+</a>
+
+<a class="subject-card" href="cn.html">
+Computer Network
+</a>
+
+<a class="subject-card" href="ct.html">
+Contemporary Technology
+</a>
+
+</div>
+
+</main>
+
+<footer>
+&copy; 2026 Subject Quiz Portal
+</footer>
+
+</body>
+</html>
