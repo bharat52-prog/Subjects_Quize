@@ -1,1 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Quiz</title>
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif;}
+
+body{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#1f4037,#99f2c8);
+}
+
+.quiz-container{
+width:700px;
+background:#fff;
+border-radius:20px;
+padding:30px;
+box-shadow:0 15px 35px rgba(0,0,0,0.3);
+text-align:center;
+}
+
+button{
+background:#1f4037;
+color:#fff;
+border:none;
+padding:12px 25px;
+border-radius:30px;
+cursor:pointer;
+margin:5px;
+}
+
+button:hover{background:#145a4a;}
+
+.screen{display:none;flex-direction:column;gap:15px;}
+
+.option{
+padding:12px;
+border:1px solid #1f4037;
+border-radius:8px;
+cursor:pointer;
+transition:0.15s;
+user-select:none;
+}
+
+.option:active{transform:scale(0.98);}
+
+.option:hover{
+background:#1f4037;
+color:#fff;
+}
+
+.progress{
+height:10px;
+background:#ddd;
+border-radius:20px;
+overflow:hidden;
+}
+
+.progress-bar{
+height:100%;
+width:0%;
+background:#1f4037;
+transition:0.2s;
+}
+
+#timer{color:red;font-weight:bold;}
+
+.review-box{
+text-align:left;
+padding:10px;
+border:1px solid #ccc;
+border-radius:10px;
+margin-bottom:10px;
+}
+
+/* ✅ FIXED: only green text */
+.correct{
+color:#28a745;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-container">
+
+<!-- SET SCREEN -->
+<div id="setScreen" class="screen" style="display:flex;">
+<h2>Select Quiz Topic</h2>
+<button onclick="startQuiz(1)">Set 1 - Network</button>
+<button onclick="startQuiz(2)">Set 2 - Web</button>
+<button onclick="startQuiz(3)">Set 3 - Security</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quizScreen" class="screen">
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div id="timer">Time Left: <span id="time">10</span>s</div>
+<div id="question"></div>
+<div id="options"></div>
+</div>
+
+<!-- RESULT -->
+<div id="resultScreen" class="screen">
+<h2>Quiz Completed 🎉</h2>
+<p>Your Score: <span id="score"></span></p>
+<button onclick="showReview()">View Answers</button>
+<button onclick="goBack()">Back</button>
+</div>
+
+<!-- REVIEW -->
+<div id="reviewScreen" class="screen">
+<h3>Answers Review</h3>
+<div id="reviewContainer"></div>
+<button onclick="goBack()">Back</button>
+</div>
+
+</div>
+
+<script>
+
+// ================= QUESTIONS =================
+const quizSets = {
+
+1: [
+{question:"Device connects multiple devices?",options:["Switch","Printer","Mouse","Monitor"],answer:"Switch"},
+{question:"IP stands for?",options:["Internet Protocol","Internal Port","Input Process","None"],answer:"Internet Protocol"},
+{question:"Router is used for?",options:["Connecting networks","Typing","Printing","Storage"],answer:"Connecting networks"},
+{question:"Topology with central hub?",options:["Star","Ring","Bus","Mesh"],answer:"Star"},
+{question:"Protocol for email sending?",options:["SMTP","FTP","HTTP","POP3"],answer:"SMTP"},
+{question:"Protocol for web?",options:["HTTP","SMTP","FTP","IP"],answer:"HTTP"},
+{question:"Port for HTTPS?",options:["443","80","21","25"],answer:"443"},
+{question:"Signal booster?",options:["Repeater","Router","Switch","Firewall"],answer:"Repeater"},
+{question:"OSI full form?",options:["Open System Interconnection","Operating System Internet","None","Other"],answer:"Open System Interconnection"},
+{question:"DNS does?",options:["Name to IP","Security","Storage","Coding"],answer:"Name to IP"}
+],
+
+2: [
+{question:"HTML stands for?",options:["Hyper Text Markup Language","High Text Machine","None","Other"],answer:"Hyper Text Markup Language"},
+{question:"CSS is used for?",options:["Styling","Programming","Database","Network"],answer:"Styling"},
+{question:"JavaScript is?",options:["Programming","Styling","Hardware","None"],answer:"Programming"},
+{question:"Tag for link?",options:["<a>","<p>","<div>","<h1>"],answer:"<a>"},
+{question:"Tag for image?",options:["<img>","<p>","<a>","<div>"],answer:"<img>"},
+{question:"CSS property for color?",options:["color","font","size","display"],answer:"color"},
+{question:"JS used for?",options:["Interactivity","Design","Storage","Security"],answer:"Interactivity"},
+{question:"HTML file extension?",options:[".html",".js",".css",".py"],answer:".html"},
+{question:"CSS stands for?",options:["Cascading Style Sheets","Creative Style","Computer Style","None"],answer:"Cascading Style Sheets"},
+{question:"JS runs in?",options:["Browser","Printer","Scanner","Router"],answer:"Browser"}
+],
+
+3: [
+{question:"Firewall is?",options:["Security","Printer","Mouse","Keyboard"],answer:"Security"},
+{question:"Strong password?",options:["Complex","Short","1234","Name"],answer:"Complex"},
+{question:"Phishing is?",options:["Cyber attack","Fishing","Coding","Network"],answer:"Cyber attack"},
+{question:"Antivirus is?",options:["Protection","Game","App","None"],answer:"Protection"},
+{question:"VPN stands for?",options:["Virtual Private Network","Very Private Net","None","Other"],answer:"Virtual Private Network"},
+{question:"Malware is?",options:["Harmful software","Good software","Game","None"],answer:"Harmful software"},
+{question:"Encryption means?",options:["Secure data","Delete data","Copy","Move"],answer:"Secure data"},
+{question:"Hacker is?",options:["Unauthorized user","User","Admin","None"],answer:"Unauthorized user"},
+{question:"Two-factor auth?",options:["Extra security","Less security","None","Other"],answer:"Extra security"},
+{question:"Spam is?",options:["Unwanted mail","Wanted mail","File","Folder"],answer:"Unwanted mail"}
+]
+
+};
+
+// ================= LOGIC =================
+let currentSet=[],current=0,score=0,timeLeft=10,timer;
+let userAnswers=[];
+let answered=false;
+
+const setScreen=document.getElementById("setScreen");
+const quizScreen=document.getElementById("quizScreen");
+const resultScreen=document.getElementById("resultScreen");
+const reviewScreen=document.getElementById("reviewScreen");
+
+const questionEl=document.getElementById("question");
+const optionsEl=document.getElementById("options");
+const scoreEl=document.getElementById("score");
+const progressBar=document.getElementById("progressBar");
+const reviewContainer=document.getElementById("reviewContainer");
+const timeEl=document.getElementById("time");
+
+// START
+function startQuiz(set){
+currentSet=quizSets[set];
+current=0;score=0;userAnswers=[];
+
+setScreen.style.display="none";
+quizScreen.style.display="flex";
+resultScreen.style.display="none";
+reviewScreen.style.display="none";
+
+showQuestion();
+}
+
+// SHOW QUESTION
+function showQuestion(){
+answered=false;
+resetTimer();
+startTimer();
+
+let q=currentSet[current];
+questionEl.innerHTML="<b>Q"+(current+1)+":</b> "+q.question;
+optionsEl.innerHTML="";
+
+q.options.forEach(opt=>{
+let div=document.createElement("div");
+div.className="option";
+div.textContent=opt;
+
+div.addEventListener("pointerdown",()=>{
+if(answered) return;
+answered=true;
+selectAnswer(opt,div);
+},{once:true});
+
+optionsEl.appendChild(div);
+});
+
+progressBar.style.width=(current/currentSet.length)*100+"%";
+}
+
+// SELECT
+function selectAnswer(ans,element){
+clearInterval(timer);
+
+document.querySelectorAll(".option").forEach(o=>{
+o.style.pointerEvents="none";
+});
+
+element.style.background="#1f4037";
+element.style.color="#fff";
+
+userAnswers.push(ans);
+if(ans===currentSet[current].answer) score++;
+
+setTimeout(nextQuestion,150);
+}
+
+// NEXT
+function nextQuestion(){
+current++;
+if(current<currentSet.length){
+showQuestion();
+}else{
+showResult();
+}
+}
+
+// RESULT
+function showResult(){
+quizScreen.style.display="none";
+resultScreen.style.display="flex";
+scoreEl.innerText=score+" / "+currentSet.length;
+}
+
+// REVIEW
+function showReview(){
+resultScreen.style.display="none";
+reviewScreen.style.display="flex";
+reviewContainer.innerHTML="";
+
+currentSet.forEach((q,i)=>{
+let isCorrect = userAnswers[i] === q.answer;
+
+let div=document.createElement("div");
+div.className="review-box";
+
+div.innerHTML=`
+<b>Q${i+1}:</b> ${q.question}<br>
+Your Answer: 
+<span style="color:${isCorrect?'green':'red'};font-weight:bold;">
+${userAnswers[i] || "Not Answered"}
+</span><br>
+Correct Answer: <span class="correct">${q.answer}</span>
+<br><br>
+`;
+
+reviewContainer.appendChild(div);
+});
+}
+
+// BACK
+function goBack(){
+location.reload();
+}
+
+// TIMER
+function startTimer(){
+timeLeft=10;
+timeEl.innerText=timeLeft;
+
+timer=setInterval(()=>{
+timeLeft--;
+timeEl.innerText=timeLeft;
+
+if(timeLeft<=0){
+clearInterval(timer);
+userAnswers.push("Not Answered");
+nextQuestion();
+}
+},1000);
+}
+
+function resetTimer(){
+clearInterval(timer);
+}
+
+</script>
+
+</body>
+</html>
